@@ -11,6 +11,8 @@ from ZODB.POSException import ConflictError
 
 from zope.interface import implements
 from zope.interface import classProvides
+from zope.component import queryUtility
+from zope.publisher.browser import TestRequest
 
 from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
@@ -19,6 +21,7 @@ from collective.transmogrifier.utils import defaultMatcher
 from collective.transmogrifier.utils import defaultKeys
 from collective.transmogrifier.utils import resolvePackageReferenceOrFile
 
+from collective.groupspace.roles.browser.roles import RolesView
 from Products.CMFCore.utils import getToolByName
 from Products.Archetypes.interfaces import IBaseObject
 from AccessControl.interfaces import IRoleManager
@@ -26,6 +29,12 @@ from AccessControl.interfaces import IRoleManager
 DATAFIELD = '_datafield_'
 STATISTICSFIELD = '_statistics_field_prefix_'
 
+try:
+    from collective.groupspace.roles.interfaces import IRolesPageRole
+    from collective.groupspace.roles.interfaces import ILocalGroupSpacePASRoles
+    HAS_GS = True
+except ImportError:
+    HAS_GS = False
 
 class JSONSource(object):
     """ """
@@ -472,10 +481,21 @@ class LocalRoles(object):
                 yield item; continue
 
             if IRoleManager.providedBy(obj):
+                new_settings = []
+                groups = getToolByName(self.context, 'portal_groups')
                 for principal, roles in item[roleskey].items():
                     if roles:
                         obj.manage_addLocalRoles(principal, roles)
                         obj.reindexObjectSecurity()
+                        if HAS_GS:
+                            new_settings.append({
+                                'id': principal,
+                                'type': groups.getGroup(principal) and 'group' or 'user',
+                                'roles': [r for r in roles if queryUtility(IRolesPageRole, r)],
+                            })
+                if HAS_GS and ILocalGroupSpacePASRoles.providedBy(obj):
+                    roles_view = RolesView(obj, TestRequest())
+                    roles_view.update_role_settings(new_settings)
 
             yield item
 
