@@ -490,7 +490,7 @@ class LocalRoles(object):
                         if HAS_GS:
                             new_settings.append({
                                 'id': principal,
-                                'type': groups.getGroup(principal) and 'group' or 'user',
+                                'type': groups.getGroupById(principal) and 'group' or 'user',
                                 'roles': [r for r in roles if queryUtility(IRolesPageRole, r)],
                             })
                 if HAS_GS and ILocalGroupSpacePASRoles.providedBy(obj):
