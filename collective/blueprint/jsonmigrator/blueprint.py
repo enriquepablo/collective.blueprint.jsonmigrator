@@ -438,7 +438,7 @@ class PermissionMapping(object):
                             roles=perm_dict['roles'],
                             acquire=perm_dict['acquire'])
                     except ValueError:
-                        logging.error('Error setting the perm "%s"' % perm)
+                        pass
 
             yield item
 
