@@ -483,8 +483,11 @@ class LocalRoles(object):
             if IRoleManager.providedBy(obj):
                 new_settings = []
                 groups = getToolByName(self.context, 'portal_groups')
+                newrolemap = self.options.get('local-roles-mapping', {})
                 for principal, roles in item[roleskey].items():
                     if roles:
+                        if newrolemap:
+                            roles = [newrolemap.get(r, r) for r in roles]
                         obj.manage_addLocalRoles(principal, roles)
                         obj.reindexObjectSecurity()
                         if HAS_GS:
