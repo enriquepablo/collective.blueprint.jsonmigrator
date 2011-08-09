@@ -484,6 +484,11 @@ class LocalRoles(object):
                 new_settings = []
                 groups = getToolByName(self.context, 'portal_groups')
                 newrolemap = self.options.get('local-roles-mapping', {})
+                if newrolemap:
+                    newrolemap = newrolemap.split('\n')
+                    newrolemap = dict([(t.split(':')[0].strip(),
+                                     t.split(':')[1].strip())
+                                 for t in newrolemap if ':' in t])
                 for principal, roles in item[roleskey].items():
                     if roles:
                         if newrolemap:
